@@ -90,20 +90,6 @@ export interface paths {
   "/api/user/history/from/{startDate}/to/{endDate}": {
     delete: operations["HistoryController_deleteHistoryRange"];
   };
-  "/api/admin/logs": {
-    get: operations["AdminController_getLogs"];
-  };
-  "/api/admin/logs/{logFile}": {
-    get: operations["AdminController_downloadLogFile"];
-  };
-  "/api/admin/blocked-videos": {
-    get: operations["AdminController_findAll"];
-    post: operations["AdminController_create"];
-  };
-  "/api/admin/blocked-videos/{id}": {
-    get: operations["AdminController_isVideoBlocked"];
-    delete: operations["AdminController_delete"];
-  };
   "/api/videos/{id}": {
     get: operations["VideosController_getVideos"];
   };
@@ -173,9 +159,6 @@ export interface paths {
   "/api/homepage/homefeed": {
     get: operations["HomepageController_getHomeFeed"];
   };
-  "/api/proxy/text": {
-    get: operations["ProxyController_getText"];
-  };
   "/api/proxy/image": {
     get: operations["ProxyController_getQuery"];
   };
@@ -193,6 +176,30 @@ export interface paths {
   };
   "/api/playlists/continuation": {
     get: operations["PlaylistsController_getPlaylistContinuation"];
+  };
+  "/api/admin/info": {
+    get: operations["AdminController_getInfo"];
+  };
+  "/api/admin/server-settings": {
+    get: operations["AdminController_getServerSettings"];
+    post: operations["AdminController_updateServerSettings"];
+  };
+  "/api/admin/logs": {
+    get: operations["AdminController_getLogs"];
+  };
+  "/api/admin/logs/{logFile}": {
+    get: operations["AdminController_downloadLogFile"];
+  };
+  "/api/admin/blocked-videos": {
+    get: operations["AdminController_findAll"];
+    post: operations["AdminController_create"];
+  };
+  "/api/admin/blocked-videos/{id}": {
+    get: operations["AdminController_isVideoBlocked"];
+    delete: operations["AdminController_delete"];
+  };
+  "/api/admin/users": {
+    post: operations["AdminController_createUser"];
   };
 }
 
@@ -239,7 +246,7 @@ export interface components {
       username: string;
       profileImage: string;
       settings: components["schemas"]["SettingsDto"];
-      admin: boolean;
+      admin?: boolean;
     };
     VTThumbnailDto: {
       quality?: string;
@@ -331,16 +338,6 @@ export interface components {
       lengthSeconds: number;
       /** Format: date-time */
       lastVisit: string;
-    };
-    LogFileDto: {
-      name: string;
-      size: number;
-      created: number;
-      lastModified: number;
-    };
-    LogsDto: {
-      logFiles: components["schemas"]["LogFileDto"][];
-      location: string;
     };
     VTPreviewThumbnailDto: {
       urlTemplate: string;
@@ -696,7 +693,30 @@ export interface components {
         channelID?: string;
       };
       items: components["schemas"]["PlaylistItemDto"][];
-      continuation: Record<string, unknown> | null;
+      continuation: unknown;
+    };
+    InfoDto: {
+      serverIpV4: string;
+      serverIpV6: string;
+      proxyIpV4: string;
+      proxyIpV6: string;
+    };
+    ServerSettingsDto: {
+      registrationEnabled: boolean;
+    };
+    LogFileDto: {
+      name: string;
+      size: number;
+      created: number;
+      lastModified: number;
+    };
+    LogsDto: {
+      logFiles: components["schemas"]["LogFileDto"][];
+      location: string;
+    };
+    UserDto: {
+      username: string;
+      password: string;
     };
   };
   responses: never;
@@ -1034,76 +1054,6 @@ export interface operations {
       path: {
         startDate: string;
         endDate: string;
-      };
-    };
-    responses: {
-      200: {
-        content: never;
-      };
-    };
-  };
-  AdminController_getLogs: {
-    responses: {
-      200: {
-        content: {
-          "application/json": components["schemas"]["LogsDto"];
-        };
-      };
-    };
-  };
-  AdminController_downloadLogFile: {
-    parameters: {
-      path: {
-        logFile: string;
-      };
-    };
-    responses: {
-      200: {
-        content: never;
-      };
-    };
-  };
-  AdminController_findAll: {
-    responses: {
-      200: {
-        content: {
-          "application/json": string[];
-        };
-      };
-    };
-  };
-  AdminController_create: {
-    requestBody: {
-      content: {
-        "application/json": string;
-      };
-    };
-    responses: {
-      201: {
-        content: {
-          "application/json": string;
-        };
-      };
-    };
-  };
-  AdminController_isVideoBlocked: {
-    parameters: {
-      path: {
-        id: string;
-      };
-    };
-    responses: {
-      200: {
-        content: {
-          "application/json": boolean;
-        };
-      };
-    };
-  };
-  AdminController_delete: {
-    parameters: {
-      path: {
-        id: string;
       };
     };
     responses: {
@@ -1520,24 +1470,11 @@ export interface operations {
       };
     };
   };
-  ProxyController_getText: {
-    parameters: {
-      query: {
-        url: string;
-      };
-    };
-    responses: {
-      200: {
-        content: {
-          "application/json": string;
-        };
-      };
-    };
-  };
   ProxyController_getQuery: {
     parameters: {
       query: {
         url: string;
+        local: boolean;
       };
     };
     responses: {
@@ -1619,6 +1556,122 @@ export interface operations {
       200: {
         content: {
           "application/json": Record<string, never>;
+        };
+      };
+    };
+  };
+  AdminController_getInfo: {
+    responses: {
+      200: {
+        content: {
+          "application/json": components["schemas"]["InfoDto"];
+        };
+      };
+    };
+  };
+  AdminController_getServerSettings: {
+    responses: {
+      200: {
+        content: {
+          "application/json": components["schemas"]["ServerSettingsDto"];
+        };
+      };
+    };
+  };
+  AdminController_updateServerSettings: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ServerSettingsDto"];
+      };
+    };
+    responses: {
+      201: {
+        content: {
+          "application/json": components["schemas"]["ServerSettingsDto"];
+        };
+      };
+    };
+  };
+  AdminController_getLogs: {
+    responses: {
+      200: {
+        content: {
+          "application/json": components["schemas"]["LogsDto"];
+        };
+      };
+    };
+  };
+  AdminController_downloadLogFile: {
+    parameters: {
+      path: {
+        logFile: string;
+      };
+    };
+    responses: {
+      200: {
+        content: never;
+      };
+    };
+  };
+  AdminController_findAll: {
+    responses: {
+      200: {
+        content: {
+          "application/json": string[];
+        };
+      };
+    };
+  };
+  AdminController_create: {
+    requestBody: {
+      content: {
+        "application/json": string;
+      };
+    };
+    responses: {
+      201: {
+        content: {
+          "application/json": string;
+        };
+      };
+    };
+  };
+  AdminController_isVideoBlocked: {
+    parameters: {
+      path: {
+        id: string;
+      };
+    };
+    responses: {
+      200: {
+        content: {
+          "application/json": boolean;
+        };
+      };
+    };
+  };
+  AdminController_delete: {
+    parameters: {
+      path: {
+        id: string;
+      };
+    };
+    responses: {
+      200: {
+        content: never;
+      };
+    };
+  };
+  AdminController_createUser: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserDto"];
+      };
+    };
+    responses: {
+      201: {
+        content: {
+          "application/json": components["schemas"]["UserprofileDto"];
         };
       };
     };
