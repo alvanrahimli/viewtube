@@ -1,4 +1,4 @@
-import { ApiDto } from '@/utils/shared';
+import type { ApiDto } from '@/utils/shared';
 
 export const useGetLogs = () => {
   const { apiUrl } = useApiUrl();
